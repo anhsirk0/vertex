@@ -1,0 +1,5 @@
+[corners]
+top_left = "notify-send top_left"
+top_right = "notify-send top_right"
+bottom_left = "notify-send bottom_left"
+bottom_right = "notify-send bottom_right"
