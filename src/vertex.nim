@@ -21,15 +21,20 @@ type
     RightBottom = "right_bottom",
 
 
-const checkInterval = 200
-const bounce = 20
-
 let configFile = getEnv("HOME") & "/.config/vertex/config.toml"
 if not fileExists(configFile):
   quit fmt"Config file [{configFile}] does not exists"
 
 let config = parsetoml.parseFile(configFile)
 echo config
+
+# config vars
+let  
+  checkInterval = config{"check_interval"}.getInt(200)
+  bounce = config{"bounce"}.getInt(200)
+  edgeOffset = config{"edge_offset"}.getInt(200)
+  cornerReactivation = config{"corner", "reactivation"}.getInt(1000)
+  edgeReactivation = config{"edge", "reactivation"}.getInt(500)  
 
 var
   display: PDisplay
@@ -44,17 +49,18 @@ var
 
 
 proc moveCursor(desX, desY: cint) =
-  discard XWarpPointer(display, rootWindow, rootWindow, 0, 0, 0, 0, desX, desY)
+  discard XWarpPointer(display, cWindow, rootWindow, 0, 0, 0, 0, desX, desY)
   discard XFlush(display)
+  # discard XSync(display, true.XBool)
 
 
-proc action(prop: Prop, loc: Location, desX, desY: cint) =
-  try:
-    let cmd = config[$prop][$loc].getStr()
-    moveCursor(desX, desY)
+proc action(prop: Prop, loc: Location, desX: int = 0, desY: int = 0) =
+  let cmd = config{$prop, $loc}.getStr("")
+  if cmd != "":
     discard execCmd cmd & " &"
-  except:
-    discard
+    if desX != 0 and desY != 0:
+      moveCursor(desX.cint, desY.cint)
+    sleep(if prop == Prop.Corner: cornerReactivation else: edgeReactivation)
 
 
 proc init() =
@@ -76,6 +82,7 @@ proc init() =
     if p != 1:
       quit "Could not read cursor position"
 
+    # Corners
     if rootX == 0 and rootY == 0:
       action(Prop.Corner, Location.TopLeft, bounce, bounce)
 
@@ -87,6 +94,31 @@ proc init() =
 
     if rootX >= width - 1 and rootY >= height - 1:
       action(Prop.Corner, Location.BottomRight, -bounce, -bounce)
+
+    # Edges
+    if rootX > edgeOffset and rootX < width div 2 and rootY == 0:
+      action(Prop.Edge, Location.TopLeft)
+
+    if rootX < width - edgeOffset and rootX > width div 2 and rootY == 0:
+      action(Prop.Edge, Location.TopRight)
+
+    if rootX > edgeOffset and rootX < width div 2 and rootY >= height - 1:
+      action(Prop.Edge, Location.BottomLeft)
+
+    if rootX < width - edge_offset and rootX > width div 2 and rootY >= height - 1:
+      action(Prop.Edge, Location.BottomRight)
+
+    if rootX == 0 and rootY > edgeOffset and rootY < height div 2:
+      action(Prop.Edge, Location.LeftTop)
+
+    if rootX == 0 and rootY < height - edgeOffset and rootY > height div 2:
+      action(Prop.Edge, Location.LeftBottom)
+
+    if rootX == width - 1 and rootY > edgeOffset and rootY < height div 2:
+      action(Prop.Edge, Location.RightTop)
+
+    if rootX == width - 1 and rootY < height - edge_offset and rootY > height div 2:
+      action(Prop.Edge, Location.RightBottom)
 
 
 when isMainModule:
