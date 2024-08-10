@@ -6,10 +6,30 @@ import
   x11/xlib,
   x11/x
 
+
+type
+  Prop {.pure.} = enum
+    Corner = "corner", Edge = "edge"
+  Location {.pure.} = enum
+    TopLeft = "top_left",
+    TopRight = "top_right",
+    BottomLeft = "bottom_left",
+    BottomRight = "bottom_right",
+    LeftTop = "left_top",
+    RightTop = "right_top",
+    LeftBottom = "left_bottom",
+    RightBottom = "right_bottom",
+
+
 const checkInterval = 200
 const bounce = 20
 
 let configFile = getEnv("HOME") & "/.config/vertex/config.toml"
+if not fileExists(configFile):
+  quit fmt"Config file [{configFile}] does not exists"
+
+let config = parsetoml.parseFile(configFile)
+echo config
 
 var
   display: PDisplay
@@ -23,17 +43,21 @@ var
   mask: cuint = 0
 
 
-proc moveCursor(posX, posY: cint) =
-  discard XWarpPointer(display, rootWindow, rootWindow, 0, 0, 0, 0, posX, posY)
+proc moveCursor(desX, desY: cint) =
+  discard XWarpPointer(display, rootWindow, rootWindow, 0, 0, 0, 0, desX, desY)
   discard XFlush(display)
 
+
+proc action(prop: Prop, loc: Location, desX, desY: cint) =
+  try:
+    let cmd = config[$prop][$loc].getStr()
+    moveCursor(desX, desY)
+    discard execCmd cmd & " &"
+  except:
+    discard
+
+
 proc init() =
-  if not fileExists(configFile):
-    quit fmt"Config file [{configFile}] does not exists"
-
-  let config = parsetoml.parseFile(configFile)
-  echo config
-
   display = XOpenDisplay(nil)
   if display == nil:
     quit "Failed to open display"
@@ -53,36 +77,16 @@ proc init() =
       quit "Could not read cursor position"
 
     if rootX == 0 and rootY == 0:
-      try:
-        let cmd = config["corners"]["top_left"].getStr()
-        moveCursor(bounce, bounce)
-        discard execCmd cmd & " &"
-      except:
-        discard "No top left"
+      action(Prop.Corner, Location.TopLeft, bounce, bounce)
 
     if rootX >= width - 1 and rootY == 0:
-      try:
-        let cmd = config["corners"]["top_right"].getStr()
-        moveCursor(-bounce, bounce)
-        discard execCmd cmd & " &"
-      except:
-        discard "No top right"
+      action(Prop.Corner, Location.TopRight, -bounce, bounce)
 
     if rootX == 0 and rootY >= height - 1:
-      try:
-        let cmd = config["corners"]["bottom_left"].getStr()
-        moveCursor(bounce, -bounce)
-        discard execCmd cmd & " &"
-      except:
-        discard "No bottom left"
+      action(Prop.Corner, Location.BottomLeft, bounce, -bounce)
 
     if rootX >= width - 1 and rootY >= height - 1:
-      try:
-        let cmd = config["corners"]["bottom_right"].getStr()
-        moveCursor(-bounce, -bounce)
-        discard execCmd cmd & " &"
-      except:
-        discard "No bottom right"
+      action(Prop.Corner, Location.BottomRight, -bounce, -bounce)
 
 
 when isMainModule:
