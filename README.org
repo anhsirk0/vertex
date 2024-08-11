@@ -1,0 +1,42 @@
+* Vertex - Hot corners/edges for X11
++ Git repo on Codeberg: <https://codeberg.org/anhsirk0/vertex>
+  - Mirrors:
+    + GitHub: <https://github.com/anhsirk0/vertex>
+
+* Installation
+#+BEGIN_SRC shell
+git clone https://codeberg.org/anhsirk0/vertex --depth=1
+#+END_SRC
+#+BEGIN_SRC shell
+cd vertex
+#+END_SRC
+#+BEGIN_SRC shell
+nimble build
+#+END_SRC
+#+BEGIN_SRC shell
+./vertex
+#+END_SRC
+* config.toml
+#+BEGIN_SRC toml
+check_interval = 200
+bounce = 10
+edge_offset = 10
+
+[corner]
+reactivation = 2000 # 2sec
+top_left = "notify-send corner_top_left"
+top_right = "notify-send corner_top_right"
+bottom_left = "notify-send corner_bottom_left"
+bottom_right = "notify-send corner_bottom_right"
+
+[edge]
+reactivation = 1000 # 1sec
+top_left = "notify-send edge_top_left"
+top_right = "notify-send edge_top_right"
+bottom_left = "notify-send edge_bottom_left"
+bottom_right = "notify-send edge_bottom_right"
+left_top = "notify-send edge_left_top"
+right_top = "notify-send edge_right_top"
+left_bottom = "notify-send edge_left_bottom"
+right_bottom = "notify-send edge_right_bottom"
+#+END_SRC
