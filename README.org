@@ -16,7 +16,7 @@ nimble build
 #+BEGIN_SRC shell
 ./vertex
 #+END_SRC
-* config.toml
+* Configuration [~/.config/vertex/config.toml]
 #+BEGIN_SRC toml
 check_interval = 200
 bounce = 10
