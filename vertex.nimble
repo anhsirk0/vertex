@@ -10,4 +10,4 @@ bin           = @["vertex"]
 
 # Dependencies
 
-requires "nim >= 2.0.4", "x11 >= 1.2", "parsetoml >= 0.7.1"
+requires "nim >= 2.0.4", "xcb >= 0.2.1", "parsetoml >= 0.7.1"
